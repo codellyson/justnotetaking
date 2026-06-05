@@ -130,7 +130,7 @@ Build the shape. No notes persist yet — the canvas still seeds from `SEED` on 
 - `wrangler d1 migrations apply justnotes-dev --local` applies Better Auth's generated schema cleanly
 - All four surfaces share TypeScript types via `packages/api-client`
 - Legacy Next.js files (`src/app/`, `next.config.ts`, `next-env.d.ts`, root tsconfig.json, root postcss.config.mjs, root eslint.config.mjs) are removed
-- Single commit lands the full Phase 0 diff
+- Phase 0 lands as a coherent sequence of commits (one per sub-scaffold + a verification commit), not a single squash — keeps blast radius small if a step regresses
 
 ---
 

@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { anonymous, bearer } from "better-auth/plugins";
+import type { D1Database } from "@cloudflare/workers-types";
 import { createDb } from "./db/client";
 import { schema } from "./db/schema";
 
