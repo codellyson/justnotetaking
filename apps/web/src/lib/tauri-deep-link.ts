@@ -69,9 +69,11 @@ function parseCallbackToken(url: string): string | null {
 
 // URL the user should be sent to (in the system browser) to start an
 // OAuth dance that ends in our desktop callback. Provider is passed
-// through to Better Auth's /api/auth/sign-in/social.
+// through to Better Auth's /api/auth/sign-in/social. The callbackURL
+// deliberately sits outside /api/auth/ so it doesn't collide with
+// Better Auth's wildcard route in Hono's trie router.
 export function buildDesktopOAuthUrl(provider: "google"): string {
-  const callbackURL = `${API_BASE_URL}/api/auth/desktop-callback`;
+  const callbackURL = `${API_BASE_URL}/api/desktop-callback`;
   const params = new URLSearchParams({ provider, callbackURL });
   return `${API_BASE_URL}/api/auth/sign-in/social?${params.toString()}`;
 }

@@ -63,9 +63,13 @@ app.get("/api/me", (c) => {
 // in OS keychain and reloads its webview; the bearer-mode auth client
 // then carries it on every subsequent request.
 //
+// Lives at /api/desktop-callback (not /api/auth/desktop-callback) so the
+// specific route doesn't break Hono's trie matching for the /api/auth/**
+// wildcard that Better Auth needs for /sign-in/anonymous etc.
+//
 // The HTML escaping is paranoid because session.token, while not
 // user-controlled, ends up in both attribute and script contexts.
-app.get("/api/auth/desktop-callback", (c) => {
+app.get("/api/desktop-callback", (c) => {
   const session = c.get("session") as { token?: string } | null;
   const token = session?.token;
   if (!token) {
