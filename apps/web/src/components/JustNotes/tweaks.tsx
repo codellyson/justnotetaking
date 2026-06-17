@@ -349,18 +349,9 @@ export function TweaksUI({
       />
 
       <TweakSection label="Paper" />
-      <TweakRadio
-        label="Tone"
-        value={t.palette}
-        options={["warm", "cool", "mono"] as const}
-        onChange={(v) => setTweak("palette", v)}
-      />
-      <TweakRadio
-        label="Body"
-        value={t.bodyFont}
-        options={["serif", "sans"] as const}
-        onChange={(v) => setTweak("bodyFont", v)}
-      />
+      {/* Tone + Body removed in the v2 design — color comes from the
+          active JustUI theme (palette swatch in the bottom-right) and
+          all body text is Geist. */}
       <TweakSlider
         label="Corner"
         value={t.radius}

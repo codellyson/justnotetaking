@@ -8,41 +8,17 @@ export type Note = {
 
 export type Recency = "fresh" | "recent" | "older" | "ancient";
 
-export type PaperTone = {
-  bg: string;
-  fg: string;
-  muted: string;
-  alpha: number;
-};
-
-export type Palette = Record<Recency, PaperTone>;
-
-export const AMBER = "#e8a13f";
 export const GRID = 28;
 export const WARM_MS = 2 * 60 * 1000;
 export const INK_MS = 1000;
 
-export const PALETTES: Record<string, Palette> = {
-  warm: {
-    fresh:   { bg: "#fcf7e5", fg: "#1a1611", muted: "#5d5648", alpha: 1.0 },
-    recent:  { bg: "#f1ead8", fg: "#1a1611", muted: "#5d5648", alpha: 1.0 },
-    older:   { bg: "#dcd5c2", fg: "#2a2520", muted: "#6b6557", alpha: 1.0 },
-    ancient: { bg: "#9c9789", fg: "#2a2520", muted: "#534f47", alpha: 0.62 },
-  },
-  cool: {
-    fresh:   { bg: "#eef3fb", fg: "#0f1622", muted: "#4a5568", alpha: 1.0 },
-    recent:  { bg: "#dde5f0", fg: "#0f1622", muted: "#4a5568", alpha: 1.0 },
-    older:   { bg: "#c4cdda", fg: "#1a2030", muted: "#525c6b", alpha: 1.0 },
-    ancient: { bg: "#8e95a1", fg: "#1a2030", muted: "#3a4150", alpha: 0.62 },
-  },
-  mono: {
-    fresh:   { bg: "#f3f3f0", fg: "#15151a", muted: "#555", alpha: 1.0 },
-    recent:  { bg: "#e3e3df", fg: "#15151a", muted: "#555", alpha: 1.0 },
-    older:   { bg: "#c8c8c2", fg: "#1f1f23", muted: "#4f4f54", alpha: 1.0 },
-    ancient: { bg: "#8a8a85", fg: "#1f1f23", muted: "#3a3a3e", alpha: 0.6 },
-  },
-};
-
+/**
+ * Maps a note's `t` (last-touched timestamp) to one of four recency
+ * buckets. Used to derive paper opacity + the recency-key legend in
+ * Chrome. The thresholds (6h / 48h / 14d) are tuned for the canvas
+ * vibe — "fresh" should still feel warm hours later, "ancient" should
+ * feel like archive.
+ */
 export function recencyOf(ms: number): Recency {
   const h = (Date.now() - ms) / 3.6e6;
   if (h < 6) return "fresh";
@@ -50,6 +26,20 @@ export function recencyOf(ms: number): Recency {
   if (h < 24 * 14) return "older";
   return "ancient";
 }
+
+/**
+ * Opacity multiplier per recency bucket. The base note style uses the
+ * theme's bg-secondary token; multiplying by this number is what gives
+ * older notes the faded-paper feeling without needing per-theme color
+ * tables. The values are tuned against dark themes — light themes get
+ * close-to-correct because the canvas bg behind them is also light.
+ */
+export const RECENCY_ALPHA: Record<Recency, number> = {
+  fresh: 1.0,
+  recent: 0.92,
+  older: 0.78,
+  ancient: 0.55,
+};
 
 export const uid = () => Math.random().toString(36).slice(2, 10);
 
@@ -67,8 +57,6 @@ export const restAfterFirst = (s: string) => {
 
 export type Tweaks = {
   grid: "dots" | "lines" | "off";
-  palette: "warm" | "cool" | "mono";
-  bodyFont: "serif" | "sans";
   radius: number;
   glow: boolean;
   noteWidth: number;
@@ -83,9 +71,7 @@ export type Tweaks = {
 
 export const TWEAK_DEFAULTS: Tweaks = {
   grid: "dots",
-  palette: "warm",
-  bodyFont: "serif",
-  radius: 2,
+  radius: 6,
   glow: true,
   noteWidth: 220,
   showRecencyKey: false,

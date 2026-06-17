@@ -8,22 +8,21 @@ import React, {
   type CSSProperties,
 } from "react";
 import {
-  AMBER,
   GRID,
   INK_MS,
-  PALETTES,
+  RECENCY_ALPHA,
   WARM_MS,
   firstNonEmpty,
   recencyOf,
   restAfterFirst,
   uid,
   type Note,
-  type Palette,
   type Tweaks,
 } from "./lib";
 import { renderBody, renderHeadline } from "./markdown";
 import { AmbientBar, Compass, InkUnderline, TimeScrub } from "./cherries";
 import { TweaksUI } from "./tweaks";
+import { Button } from "@codellyson/justui/react";
 import { remoteStorage } from "../../lib/storage";
 import { authClient, clearKeychainToken } from "../../lib/auth-client";
 import { API_BASE_URL, isTauri } from "../../lib/runtime";
@@ -569,7 +568,6 @@ export default function JustNotes(props: JustNotesProps) {
   }, [editingId, ambientOpen, helpOpen, tweaksOpen, authPanelOpen, recallQuery, recallIdx, matchIds]);
 
   // ── Render ─────────────────────────────────────────────────────────
-  const palette = PALETTES[t.palette] || PALETTES.warm;
   const inOverview = view.zoom < 0.95;
 
   const warmMap = useMemo(() => {
@@ -619,8 +617,6 @@ export default function JustNotes(props: JustNotesProps) {
               paperAge={t.paperAge}
               showSaved={savedTickId === n.id}
               dragging={draggingId === n.id}
-              palette={palette}
-              bodyFont={t.bodyFont}
               dimmed={!!matchSet && !matchSet.has(n.id)}
               highlit={!!matchSet && matchSet.has(n.id)}
               focused={!!matchIds && matchIds[recallIdx] === n.id}
@@ -641,8 +637,6 @@ export default function JustNotes(props: JustNotesProps) {
         return (
           <FocusedEditor
             note={n}
-            palette={palette}
-            bodyFont={t.bodyFont}
             onTextChange={(v) => updateNoteText(n.id, v)}
             onCommit={commitEditing}
           />
@@ -654,7 +648,6 @@ export default function JustNotes(props: JustNotesProps) {
         folderPath="~/Notes/2026 · iCloud Drive"
         hintVisible={!interacted}
         showRecencyKey={t.showRecencyKey}
-        palette={palette}
         overviewLabel={inOverview ? "overview · z to return" : null}
         isAnonymous={isAnonymous}
         identityLabel={identityLabel}
@@ -691,9 +684,6 @@ export default function JustNotes(props: JustNotesProps) {
   );
 }
 
-// Suppress "AMBER unused" — kept for future-use palette tweaks.
-void AMBER;
-
 // ── Canvas ─────────────────────────────────────────────────────────────
 type CanvasProps = {
   pan: { x: number; y: number };
@@ -710,12 +700,12 @@ const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 ) {
   const gridStyle = useMemo<CSSProperties>(() => {
     const z = zoom;
-    if (grid === "off") return { background: "#0a0d12" };
+    if (grid === "off") return { background: "rgb(var(--bg))" };
     if (grid === "lines") {
       const line = "rgba(255,255,255,0.035)";
       const s = 56 * z;
       return {
-        backgroundColor: "#0a0d12",
+        backgroundColor: "rgb(var(--bg))",
         backgroundImage:
           `linear-gradient(${line} 1px, transparent 1px), ` +
           `linear-gradient(90deg, ${line} 1px, transparent 1px)`,
@@ -726,7 +716,7 @@ const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
     }
     const s = GRID * z;
     return {
-      backgroundColor: "#0a0d12",
+      backgroundColor: "rgb(var(--bg))",
       backgroundImage:
         "radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1.4px)",
       backgroundSize: `${s}px ${s}px`,
@@ -751,7 +741,7 @@ const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 // ── NoteCard ───────────────────────────────────────────────────────────
 function NoteCard({
   note, editing, glowing, ink, inkSeed, warm, paperAge, showSaved, dragging,
-  palette, bodyFont, dimmed, highlit, focused, hidden, scrubFade,
+  dimmed, highlit, focused, hidden, scrubFade,
   onMouseDown, onTextChange,
 }: {
   note: Note;
@@ -763,8 +753,6 @@ function NoteCard({
   paperAge: boolean;
   showSaved: boolean;
   dragging: boolean;
-  palette: Palette;
-  bodyFont: Tweaks["bodyFont"];
   dimmed: boolean;
   highlit: boolean;
   focused: boolean;
@@ -774,7 +762,6 @@ function NoteCard({
   onTextChange: (v: string) => void;
 }) {
   const rec = recencyOf(note.t);
-  const p = palette[rec];
   const taRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
@@ -808,17 +795,20 @@ function NoteCard({
     focused ? "focused" : "",
     hidden ? "is-hidden" : "",
     isHeading && !editing ? "has-heading" : "",
-    bodyFont === "sans" ? "body-sans" : "body-serif",
     warm > 0 ? "warm" : "",
     paperAge ? "paper-age" : "",
   ].filter(Boolean).join(" ");
 
+  // Paper colors derive from the active JustUI theme. The recency
+  // alpha gives the four-step aging feeling without needing per-theme
+  // color tables — fresh notes are full-opacity bg-secondary, ancient
+  // ones fade toward the canvas bg.
   const style: CSSProperties = {
     left: note.x,
     top: note.y,
-    background: p.bg,
-    color: p.fg,
-    opacity: p.alpha * (scrubFade ?? 1),
+    background: "rgb(var(--bg-secondary))",
+    color: "rgb(var(--text-primary))",
+    opacity: RECENCY_ALPHA[rec] * (scrubFade ?? 1),
     ["--warm" as string]: warm,
   };
 
@@ -833,14 +823,13 @@ function NoteCard({
           onMouseDown={(e) => e.stopPropagation()}
           placeholder="just write."
           spellCheck={false}
-          style={{ color: p.fg }}
         />
       ) : (
         <>
           {first
             ? <div className="note-first">{renderHeadline(first)}</div>
             : <div className="note-first" style={{ opacity: 0.35 }}>empty</div>}
-          {rest && <div className="note-rest" style={{ color: p.muted }}>{renderBody(rest)}</div>}
+          {rest && <div className="note-rest" style={{ color: "rgb(var(--text-secondary))" }}>{renderBody(rest)}</div>}
         </>
       )}
       {!editing && ink && <InkUnderline seed={inkSeed} />}
@@ -851,14 +840,13 @@ function NoteCard({
 
 // ── Chrome ─────────────────────────────────────────────────────────────
 function Chrome({
-  count, folderPath, hintVisible, showRecencyKey, palette, overviewLabel,
+  count, folderPath, hintVisible, showRecencyKey, overviewLabel,
   isAnonymous, identityLabel, onSignIn, onSignOut,
 }: {
   count: number;
   folderPath: string;
   hintVisible: boolean;
   showRecencyKey: boolean;
-  palette: Palette;
   overviewLabel: string | null;
   isAnonymous: boolean;
   identityLabel: string;
@@ -879,7 +867,15 @@ function Chrome({
       ) : (
         <div className="chrome chrome-id">
           <span className="id-name">{identityLabel}</span>
-          <button onClick={onSignOut} aria-label="sign out">sign out</button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onSignOut}
+            aria-label="sign out"
+            className="pointer-events-auto !px-2 font-mono text-[11px]"
+          >
+            sign out
+          </Button>
         </div>
       )}
       <div className="chrome chrome-br">{folderPath}</div>
@@ -890,7 +886,15 @@ function Chrome({
       }>
         {isAnonymous ? (
           <span className="hint">
-            <button className="signin-cta" onClick={onSignIn}>sign in</button> to sync across devices
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onSignIn}
+              className="pointer-events-auto !px-1 text-accent underline decoration-accent/40 underline-offset-4 hover:decoration-accent"
+            >
+              sign in
+            </Button>
+            {" "}to sync across devices
           </span>
         ) : (
           <span className="hint">
@@ -903,7 +907,7 @@ function Chrome({
         <div className="chrome chrome-key">
           {(["fresh", "recent", "older", "ancient"] as const).map((k) => (
             <span key={k} className="key-row">
-              <i style={{ background: palette[k].bg, opacity: palette[k].alpha }} />
+              <i style={{ background: "rgb(var(--bg-secondary))", opacity: RECENCY_ALPHA[k] }} />
               {k}
             </span>
           ))}
@@ -977,15 +981,13 @@ function HelpOverlay({ onClose }: { onClose: () => void }) {
 
 // ── FocusedEditor ──────────────────────────────────────────────────────
 function FocusedEditor({
-  note, palette, bodyFont, onTextChange, onCommit,
+  note, onTextChange, onCommit,
 }: {
   note: Note;
-  palette: Palette;
-  bodyFont: Tweaks["bodyFont"];
   onTextChange: (v: string) => void;
   onCommit: () => void;
 }) {
-  const p = palette[recencyOf(note.t)];
+  const rec = recencyOf(note.t);
   const taRef = useRef<HTMLTextAreaElement | null>(null);
   useEffect(() => {
     const ta = taRef.current;
@@ -1007,8 +1009,12 @@ function FocusedEditor({
       }}
     >
       <div
-        className={"focus-note " + (bodyFont === "sans" ? "body-sans" : "body-serif")}
-        style={{ background: p.bg, color: p.fg, opacity: p.alpha }}
+        className="focus-note"
+        style={{
+          background: "rgb(var(--bg-secondary))",
+          color: "rgb(var(--text-primary))",
+          opacity: RECENCY_ALPHA[rec],
+        }}
         onMouseDown={(e) => e.stopPropagation()}
       >
         <textarea
@@ -1018,7 +1024,6 @@ function FocusedEditor({
           onChange={(e) => onTextChange(e.target.value)}
           placeholder="just write."
           spellCheck={false}
-          style={{ color: p.fg }}
         />
         <div className="focus-meta">
           <span className="focus-meta-time">{recencyOf(note.t)}</span>

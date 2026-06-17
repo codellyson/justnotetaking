@@ -1,23 +1,33 @@
 @import "tailwindcss";
+@config "../../tailwind.config.cjs";
 
-/* Self-hosted fonts (replaces next/font/google) */
-@import "@fontsource/ibm-plex-sans/400.css";
-@import "@fontsource/ibm-plex-sans/500.css";
-@import "@fontsource/ibm-plex-mono/400.css";
-@import "@fontsource/ibm-plex-mono/500.css";
-@import "@fontsource-variable/newsreader";
+/* JustUI design tokens — CSS custom properties (--bg, --accent, etc.).
+   bootTheme() overrides these on <html> at startup based on the user's
+   stored theme; the values here are the espresso-dark fallback so the
+   first paint is correct even if JS is disabled. */
+@import "@codellyson/justui/tokens.css";
+
+/* Geist replaces IBM Plex / Newsreader as the canonical sans + mono.
+   The Tailwind preset already declares Geist as the default font-family,
+   so component code rarely needs to reference these vars directly. */
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
 
 :root {
-  --font-jn-sans: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-jn-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-  --font-jn-serif: "Newsreader Variable", "Iowan Old Style", Georgia, serif;
+  --font-jn-sans: "Geist Variable", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-jn-mono: "Geist Mono Variable", ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* Kept for any leftover serif rule in the canvas; safe to delete once
+     no .body-serif class survives the chrome rewrite. */
+  --font-jn-serif: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
 }
+
+@keyframes justui-fade { from { opacity: 0 } to { opacity: 1 } }
 
 *, *::before, *::after { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; overflow: hidden; }
 body {
-  background: #0a0d12;
-  color: rgba(255,255,255,0.78);
+  background: rgb(var(--bg));
+  color: rgb(var(--text-primary));
   font-family: var(--font-jn-sans);
   font-size: 13px;
   -webkit-font-smoothing: antialiased;

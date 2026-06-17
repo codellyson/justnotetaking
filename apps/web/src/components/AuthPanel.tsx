@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
+import { Button, Field, Modal } from "@codellyson/justui/react";
 import { authClient } from "../lib/auth-client";
 import { isTauri } from "../lib/runtime";
 import { buildDesktopOAuthUrl, openInSystemBrowser } from "../lib/tauri-deep-link";
@@ -20,16 +21,6 @@ export function AuthPanel({
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const firstFieldRef = useRef<HTMLInputElement | null>(null);
-
-  useEffect(() => {
-    if (open) {
-      setError(null);
-      window.setTimeout(() => firstFieldRef.current?.focus(), 0);
-    }
-  }, [open]);
-
-  if (!open) return null;
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -62,16 +53,12 @@ export function AuthPanel({
     setError(null);
     try {
       if (isTauri) {
-        // System browser handles the redirect dance; we'll be back via
-        // the justnotes:// deep link the desktop-callback emits. Leave
-        // the panel open and busy until then so the user has feedback.
         await openInSystemBrowser(buildDesktopOAuthUrl("google"));
       } else {
         await authClient.signIn.social({
           provider: "google",
           callbackURL: window.location.origin + "/",
         });
-        // signIn.social redirects to Google; nothing else to do.
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -80,95 +67,75 @@ export function AuthPanel({
   }
 
   return (
-    <div
-      className="focus-shroud"
-      onMouseDown={(e) => {
-        if ((e.target as HTMLElement).classList.contains("focus-shroud")) onClose();
-      }}
-      onKeyDown={(e) => {
-        if (e.key === "Escape") onClose();
-      }}
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={mode === "sign-in" ? "sign in" : "create an account"}
+      description={
+        mode === "sign-in"
+          ? "sync your notes across devices."
+          : "your current notes will follow you in."
+      }
     >
-      <div className="auth-card" onMouseDown={(e) => e.stopPropagation()}>
-        <div className="auth-head">
-          <span className="auth-title">
-            {mode === "sign-in" ? "sign in" : "create an account"}
-          </span>
-          <button className="auth-x" aria-label="close" onClick={onClose}>
-            ✕
-          </button>
-        </div>
-
-        <p className="auth-sub">
-          {mode === "sign-in"
-            ? "sync your notes across devices."
-            : "your current notes will follow you in."}
-        </p>
-
-        <form onSubmit={onSubmit} className="auth-form">
-          {mode === "sign-up" && (
-            <label className="auth-field">
-              <span>name</span>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="optional"
-                autoComplete="name"
-              />
-            </label>
-          )}
-          <label className="auth-field">
-            <span>email</span>
-            <input
-              ref={firstFieldRef}
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-            />
-          </label>
-          <label className="auth-field">
-            <span>password</span>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={8}
-              autoComplete={mode === "sign-up" ? "new-password" : "current-password"}
-            />
-          </label>
-          {error && <div className="auth-error">{error}</div>}
-          <button className="auth-submit" type="submit" disabled={busy}>
-            {busy ? "…" : mode === "sign-in" ? "sign in" : "create account"}
-          </button>
-        </form>
-
-        {hasGoogle && (
-          <>
-            <div className="auth-or">
-              <span />
-              <em>or</em>
-              <span />
-            </div>
-            <button className="auth-google" onClick={onGoogle} disabled={busy}>
-              continue with google
-            </button>
-          </>
+      <form onSubmit={onSubmit} className="flex flex-col gap-3">
+        {mode === "sign-up" && (
+          <Field
+            label="name"
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="optional"
+            autoComplete="name"
+          />
         )}
+        <Field
+          label="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          autoFocus
+          required
+          autoComplete="email"
+        />
+        <Field
+          label="password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          minLength={8}
+          autoComplete={mode === "sign-up" ? "new-password" : "current-password"}
+          error={error}
+        />
+        <Button type="submit" disabled={busy} className="mt-1">
+          {busy ? "…" : mode === "sign-in" ? "sign in" : "create account"}
+        </Button>
+      </form>
 
-        <button
-          className="auth-toggle"
-          onClick={() => {
-            setError(null);
-            setMode((m) => (m === "sign-in" ? "sign-up" : "sign-in"));
-          }}
-        >
-          {mode === "sign-in" ? "no account? create one →" : "have an account? sign in →"}
-        </button>
-      </div>
-    </div>
+      {hasGoogle && (
+        <>
+          <div className="mt-1 flex items-center gap-2.5 font-mono text-[10.5px] text-muted">
+            <span className="h-px flex-1 bg-border" />
+            <em className="not-italic">or</em>
+            <span className="h-px flex-1 bg-border" />
+          </div>
+          <Button variant="secondary" onClick={onGoogle} disabled={busy}>
+            continue with google
+          </Button>
+        </>
+      )}
+
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => {
+          setError(null);
+          setMode((m) => (m === "sign-in" ? "sign-up" : "sign-in"));
+        }}
+        className="self-start px-0 font-mono"
+      >
+        {mode === "sign-in" ? "no account? create one →" : "have an account? sign in →"}
+      </Button>
+    </Modal>
   );
 }

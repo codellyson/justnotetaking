@@ -10,9 +10,9 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@fontsource-variable/newsreader": "^5.2.0",
-    "@fontsource/ibm-plex-mono": "^5.2.0",
-    "@fontsource/ibm-plex-sans": "^5.2.0",
+    "@codellyson/justui": "link:../../../justui",
+    "@fontsource-variable/geist": "^5.2.0",
+    "@fontsource-variable/geist-mono": "^5.2.0",
     "@justnotes/api-client": "workspace:*",
     "@tauri-apps/api": "^2.11.0",
     "@tauri-apps/plugin-deep-link": "^2.4.0",

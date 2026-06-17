@@ -78,13 +78,13 @@ importers:
 
   apps/web:
     dependencies:
-      '@fontsource-variable/newsreader':
+      '@codellyson/justui':
+        specifier: link:../../../justui
+        version: link:../../../justui
+      '@fontsource-variable/geist':
         specifier: ^5.2.0
-        version: 5.2.10
-      '@fontsource/ibm-plex-mono':
-        specifier: ^5.2.0
-        version: 5.2.7
-      '@fontsource/ibm-plex-sans':
+        version: 5.2.9
+      '@fontsource-variable/geist-mono':
         specifier: ^5.2.0
         version: 5.2.8
       '@justnotes/api-client':
@@ -1187,14 +1187,11 @@ packages:
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
     engines: {node: '>=14'}
 
-  '@fontsource-variable/newsreader@5.2.10':
-    resolution: {integrity: sha512-MdI2iRwrqWpMOU/2aV2BgfZ4dJNlj/XlYaY8Zb7t87mWqHskYW0XiUANkt1cyOCiEfW2VQ0bQ5vZgGPp6B2B4w==}
+  '@fontsource-variable/geist-mono@5.2.8':
+    resolution: {integrity: sha512-KI5bj+hkkRiHttYHmccotUZ80ZuZyai+RwI1d7UId0clkx/jXxlo8qYK8j54WzmpBjtMoEMPyllV7faDcj+6RA==}
 
-  '@fontsource/ibm-plex-mono@5.2.7':
-    resolution: {integrity: sha512-MKAb8qV+CaiMQn2B0dIi1OV3565NYzp3WN5b4oT6LTkk+F0jR6j0ZN+5BKJiIhffDC3rtBULsYZE65+0018z9w==}
-
-  '@fontsource/ibm-plex-sans@5.2.8':
-    resolution: {integrity: sha512-eztSXjDhPhcpxNIiGTgMebdLP9qS4rWkysuE1V7c+DjOR0qiezaiDaTwQE7bTnG5HxAY/8M43XKDvs3cYq6ZYQ==}
+  '@fontsource-variable/geist@5.2.9':
+    resolution: {integrity: sha512-TP+QSBG3wxKGPE33CbMy/L0Nu3qvJ6Fy81Yc4LnQ95xH+i+cfEp8fyU8/kfV14YwszxIFPhnoMTbjL71waVpyQ==}
 
   '@hono/zod-validator@0.7.6':
     resolution: {integrity: sha512-Io1B6d011Gj1KknV4rXYz4le5+5EubcWEU/speUjuw9XMMIaP3n78yXLhjd2A3PXaXaUwEAluOiAyLqhBEJgsw==}
@@ -4437,11 +4434,9 @@ snapshots:
 
   '@fastify/busboy@2.1.1': {}
 
-  '@fontsource-variable/newsreader@5.2.10': {}
+  '@fontsource-variable/geist-mono@5.2.8': {}
 
-  '@fontsource/ibm-plex-mono@5.2.7': {}
-
-  '@fontsource/ibm-plex-sans@5.2.8': {}
+  '@fontsource-variable/geist@5.2.9': {}
 
   '@hono/zod-validator@0.7.6(hono@4.12.23)(zod@3.25.76)':
     dependencies:
