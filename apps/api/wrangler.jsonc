@@ -7,21 +7,53 @@
   "observability": {
     "enabled": true
   },
+
+  // ── Default env (local + `wrangler dev`) ────────────────────────────
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "justnotes-dev",
-      // Replace after running: wrangler d1 create justnotes-dev
-      // For `wrangler dev --local` (miniflare in-memory SQLite) the value
-      // is not validated, so this placeholder is fine until a real D1
-      // exists.
+      // For `wrangler dev --local` (miniflare in-memory SQLite) this isn't
+      // validated. To use a real remote dev DB: wrangler d1 create justnotes-dev
+      // and paste the returned ID.
       "database_id": "REPLACE_ME_RUN_wrangler_d1_create",
       "migrations_dir": "drizzle"
     }
   ],
   "vars": {
-    "BETTER_AUTH_URL": "http://localhost:8787"
-  }
+    "BETTER_AUTH_URL": "http://localhost:8787",
+    "TRUSTED_ORIGINS": "http://localhost:5173,http://localhost:5174,http://localhost:4321,tauri://localhost"
+  },
   // Secrets (NOT vars) live in .dev.vars locally and `wrangler secret put` in prod:
-  //   BETTER_AUTH_SECRET   — random 32-byte hex; required by Better Auth
+  //   BETTER_AUTH_SECRET    — random 32-byte hex; required.
+  //   GOOGLE_CLIENT_ID      — optional; lights up the Google sign-in button.
+  //   GOOGLE_CLIENT_SECRET  — required iff GOOGLE_CLIENT_ID is set.
+
+  // ── Production env (deploy with `wrangler deploy --env production`) ──
+  // Activate with the per-account values from `wrangler d1 create`, then
+  // attach the custom domain via `wrangler.jsonc#routes` or the dashboard.
+  "env": {
+    "production": {
+      "name": "justnotes-api-prod",
+      "vars": {
+        "BETTER_AUTH_URL": "https://api.justnotes.kreativekorna.com",
+        // Comma-separated. Add any extra origins (preview deploys, etc.).
+        "TRUSTED_ORIGINS": "https://justnotes.kreativekorna.com,tauri://localhost"
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "justnotes-prod",
+          "database_id": "REPLACE_ME_RUN_wrangler_d1_create_PROD",
+          "migrations_dir": "drizzle"
+        }
+      ],
+      "routes": [
+        {
+          "pattern": "api.justnotes.kreativekorna.com",
+          "custom_domain": true
+        }
+      ]
+    }
+  }
 }

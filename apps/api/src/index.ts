@@ -7,10 +7,19 @@ import { settingsRoutes } from "./routes/settings";
 
 const app = new Hono<Env>();
 
-// CORS for the web dev origin and the Tauri webview. Permissive in dev,
-// tightened to known origins in Phase 4.
+// CORS. Driven by the TRUSTED_ORIGINS env var (comma-separated). In dev
+// the var lists the localhost ports; in prod it lists the marketing +
+// app domains. Requests from unknown origins get no CORS headers, which
+// causes the browser to block the response — same outcome as a 403 but
+// without the worker doing the work. Origins not in the list with no
+// Origin header (curl, server-to-server) are still allowed through.
 app.use("*", cors({
-  origin: (origin) => origin ?? "*",
+  origin: (origin, c) => {
+    if (!origin) return origin;
+    const raw = (c.env as { TRUSTED_ORIGINS?: string }).TRUSTED_ORIGINS ?? "";
+    const allowed = raw.split(",").map((s: string) => s.trim()).filter(Boolean);
+    return allowed.includes(origin) ? origin : null;
+  },
   credentials: true,
   allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
   allowHeaders: ["Content-Type", "Authorization"],
