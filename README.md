@@ -1,4 +1,4 @@
-# justnotes
+# justnotetaking
 
 Spatial notes on a dark canvas — click anywhere to write, drag to place, type to recall. Notes age visually (fresh → ancient) and sync across devices.
 
@@ -18,12 +18,12 @@ You need two (or three) terminals.
 
 ```sh
 # Terminal 1 — API (Worker + local D1)
-pnpm --filter @justnotes/api dev          # → :8787
+pnpm --filter @justnotetaking/api dev          # → :8787
 
 # Terminal 2 — Web app
-pnpm --filter @justnotes/web dev          # → :5173
+pnpm --filter @justnotetaking/web dev          # → :5173
 # or marketing:
-pnpm --filter @justnotes/marketing dev    # → :4321
+pnpm --filter @justnotetaking/marketing dev    # → :4321
 
 # Terminal 3 (optional) — desktop shell
 pnpm tauri:dev                            # spawns vite as a subprocess
@@ -32,7 +32,7 @@ pnpm tauri:dev                            # spawns vite as a subprocess
 First time only — apply local D1 migrations:
 
 ```sh
-pnpm --filter @justnotes/api db:migrate:local
+pnpm --filter @justnotetaking/api db:migrate:local
 ```
 
 You'll also need `apps/api/.dev.vars`:

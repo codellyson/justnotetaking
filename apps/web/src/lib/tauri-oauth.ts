@@ -1,7 +1,7 @@
 import { isTauri, API_BASE_URL } from "./runtime";
 
 // Tauri OAuth via the localhost-listener pattern (RFC 8252 for native
-// apps). We don't use a custom URL scheme like justnotes:// because
+// apps). We don't use a custom URL scheme like justnotetaking:// because
 // macOS only registers schemes for bundled, installed .app's — dev
 // iteration with `tauri:dev` would otherwise need a fresh bundle +
 // drag-to-Applications cycle every change. Localhost listener works

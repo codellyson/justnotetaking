@@ -1,5 +1,5 @@
 import { hc } from "hono/client";
-import type { AppType } from "@justnotes/api";
+import type { AppType } from "@justnotetaking/api";
 
 export type CreateClientOpts = {
   baseUrl: string;

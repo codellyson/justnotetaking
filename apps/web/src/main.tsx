@@ -8,7 +8,7 @@ import "./styles/global.css";
 // paint. Stamps window.__JUSTUI__ so useTheme() in React components
 // knows which localStorage keys to read/write. Default is espresso/dark
 // (configured inside @codellyson/justui).
-bootTheme({ keyPrefix: "justnotes" });
+bootTheme({ keyPrefix: "justnotetaking" });
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

@@ -857,7 +857,7 @@ function Chrome({
     <>
       <div className="chrome chrome-tl">
         <span className="dot" />
-        <span className="wordmark">justnotes</span>
+        <span className="wordmark">justnotetaking</span>
       </div>
       {isAnonymous ? (
         <div className="chrome chrome-tr">

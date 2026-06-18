@@ -1,5 +1,5 @@
 {
-  "name": "@justnotes/api-client",
+  "name": "@justnotetaking/api-client",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -13,7 +13,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@justnotes/api": "workspace:*",
+    "@justnotetaking/api": "workspace:*",
     "hono": "^4.6.0"
   },
   "devDependencies": {

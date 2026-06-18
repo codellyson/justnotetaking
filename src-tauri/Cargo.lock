@@ -2076,7 +2076,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "justnotes"
+name = "justnotetaking"
 version = "0.1.0"
 dependencies = [
  "keyring",

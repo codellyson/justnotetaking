@@ -1,5 +1,5 @@
 {
-  "name": "@justnotes/api",
+  "name": "@justnotetaking/api",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -17,8 +17,8 @@
     "lint": "tsc --noEmit",
     "deploy": "wrangler deploy",
     "db:generate": "drizzle-kit generate",
-    "db:migrate:local": "wrangler d1 migrations apply justnotes-dev --local",
-    "db:migrate:remote": "wrangler d1 migrations apply justnotes-prod --remote",
+    "db:migrate:local": "wrangler d1 migrations apply justnotetaking-dev --local",
+    "db:migrate:remote": "wrangler d1 migrations apply justnotetaking-prod --remote",
     "auth:generate": "better-auth generate --config src/auth.ts --output src/db/schema.ts"
   },
   "dependencies": {

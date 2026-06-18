@@ -1,13 +1,13 @@
 # brand/
 
-Canonical sources for the justnotes visual identity. Everything else
+Canonical sources for the justnotetaking visual identity. Everything else
 (Tauri icons, favicons, OG image, marketing illustrations) derives from
 these — re-generate when the source changes.
 
 ```
 brand/
 ├── mark.svg          canonical symbol (amber dot + halo on canvas bg)
-├── wordmark.svg      mark + "justnotes" set in Geist Medium
+├── wordmark.svg      mark + "justnotetaking" set in Geist Medium
 ├── mark-1024.png     raster master for `tauri icon`
 ├── canvas-hero.svg   marketing landing-page hero illustration
 └── og.png            1200×630 social card (PIL-rendered)

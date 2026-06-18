@@ -1,5 +1,5 @@
 {
-  "name": "@justnotes/web",
+  "name": "@justnotetaking/web",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -13,7 +13,7 @@
     "@codellyson/justui": "^0.2.0",
     "@fontsource-variable/geist": "^5.2.0",
     "@fontsource-variable/geist-mono": "^5.2.0",
-    "@justnotes/api-client": "workspace:*",
+    "@justnotetaking/api-client": "workspace:*",
     "@tauri-apps/api": "^2.11.0",
     "@tauri-apps/plugin-opener": "^2.5.0",
     "better-auth": "^1.2.0",

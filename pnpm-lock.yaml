@@ -96,7 +96,7 @@ importers:
       '@fontsource-variable/geist-mono':
         specifier: ^5.2.0
         version: 5.2.8
-      '@justnotes/api-client':
+      '@justnotetaking/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
       '@tauri-apps/api':
@@ -142,7 +142,7 @@ importers:
 
   packages/api-client:
     dependencies:
-      '@justnotes/api':
+      '@justnotetaking/api':
         specifier: workspace:*
         version: link:../../apps/api
       hono:

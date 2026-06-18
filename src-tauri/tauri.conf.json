@@ -1,18 +1,18 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "JustNotes",
+  "productName": "JustNoteTaking",
   "version": "0.1.0",
-  "identifier": "com.kreativekorna.justnotes",
+  "identifier": "com.kreativekorna.justnotetaking",
   "build": {
     "frontendDist": "../apps/web/dist",
     "devUrl": "http://localhost:5173",
-    "beforeDevCommand": "pnpm --filter @justnotes/web dev",
-    "beforeBuildCommand": "pnpm --filter @justnotes/web build"
+    "beforeDevCommand": "pnpm --filter @justnotetaking/web dev",
+    "beforeBuildCommand": "pnpm --filter @justnotetaking/web build"
   },
   "app": {
     "windows": [
       {
-        "title": "JustNotes",
+        "title": "JustNoteTaking",
         "width": 1280,
         "height": 800,
         "minWidth": 800,
@@ -41,7 +41,7 @@
   "plugins": {
     "updater": {
       "endpoints": [
-        "https://github.com/REPLACE_ME_ORG/justnotes/releases/latest/download/latest.json"
+        "https://github.com/REPLACE_ME_ORG/justnotetaking/releases/latest/download/latest.json"
       ],
       "pubkey": "REPLACE_ME_RUN_tauri_signer_generate"
     }

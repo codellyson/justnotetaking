@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  justnotes mark — a single amber dot with a soft halo, centered on the
+  justnotetaking mark — a single amber dot with a soft halo, centered on the
   canvas bg. Designed to read at 16px (favicon) up to 1024px (app icon)
   without rendering changes; the halo is part of the same gradient.
 
@@ -15,7 +15,7 @@
   width="1024"
   height="1024"
   role="img"
-  aria-label="justnotes"
+  aria-label="justnotetaking"
 >
   <style>
     :root, svg {

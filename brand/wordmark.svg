@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  justnotes wordmark — small mark + "justnotes" set in Geist Medium.
+  justnotetaking wordmark — small mark + "justnotetaking" set in Geist Medium.
   Falls back to system sans if Geist isn't loaded (e.g. the OG renderer);
   the visual stays close because Geist is a clean geometric sans.
 
@@ -13,7 +13,7 @@
   width="540"
   height="120"
   role="img"
-  aria-label="justnotes"
+  aria-label="justnotetaking"
 >
   <style>
     :root, svg { --jn-accent: rgb(var(--accent, 232 161 63)); }
@@ -33,5 +33,5 @@
   <circle cx="58" cy="60" r="42" fill="url(#halo-sm)" />
   <circle cx="58" cy="60" r="22" fill="var(--jn-accent)" />
   <!-- wordmark -->
-  <text x="118" y="82" class="jn-word">justnotes</text>
+  <text x="118" y="82" class="jn-word">justnotetaking</text>
 </svg>

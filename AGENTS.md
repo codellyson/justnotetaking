@@ -8,18 +8,18 @@ A pnpm workspace with four surfaces. Read this before touching code — your tra
 - **Auth is Better Auth.** Anonymous-first via the `anonymous()` plugin — every visitor gets a real user row before doing anything. The plugin's `onLinkAccount` callback transfers FK'd rows to the new user_id when an anon upgrades to email/password or OAuth. Don't hand-roll sessions, cookies, or user tables.
 - **Design system is [`@codellyson/justui`](https://www.npmjs.com/package/@codellyson/justui).** Use the `Button` / `Field` / `Modal` / `ThemeToggle` primitives + token-based Tailwind utilities (`bg-bg`, `text-primary`, `bg-accent`, …). Don't introduce new hardcoded colors — they won't theme.
 - **Tauri talks to the API over HTTPS** like the browser does. The webview uses Better Auth's `bearer()` plugin with the token persisted in OS keychain; the browser uses cookies. The transport switch lives in `apps/web/src/lib/auth-client.ts`, gated on `isTauri`.
-- **OAuth in Tauri** uses the RFC 8252 localhost-listener pattern via `tauri-plugin-oauth`, not a custom URL scheme. The system browser bounces back to a localhost port the Rust side spun up, not `justnotes://`.
+- **OAuth in Tauri** uses the RFC 8252 localhost-listener pattern via `tauri-plugin-oauth`, not a custom URL scheme. The system browser bounces back to a localhost port the Rust side spun up, not `justnotetaking://`.
 
 ## Sharp edges
 
 - **Hono trie router.** Registering a specific path under the same prefix as a wildcard breaks wildcard matching. The Better Auth wildcard at `/api/auth/**` is fragile; our `/api/desktop-callback` deliberately sits outside `/api/auth/` for this reason. Don't add `app.get("/api/auth/whatever", …)` — proxy through your own path instead.
 - **Tailwind 4 preset wiring.** The justui preset is Tailwind 3-style JS config; we load it via `@config "./tailwind.config.cjs"` in `global.css`. Both `apps/web` and `apps/marketing` need that line — without it `bg-accent` etc. resolve to nothing.
 - **`pnpm.overrides` is load-bearing.** `kysely`, `drizzle-orm`, and `vite` are pinned via overrides because Better Auth + Drizzle pull in incompatible transitive versions. Don't remove the pins without re-validating with `wrangler dev`.
-- **D1 + Drizzle.** Schema is in `apps/api/src/db/schema.ts`. Migrations are generated via `pnpm --filter @justnotes/api db:generate`; FTS5 migration (`0002_notes_fts.sql`) is hand-written because drizzle-kit can't model virtual tables.
+- **D1 + Drizzle.** Schema is in `apps/api/src/db/schema.ts`. Migrations are generated via `pnpm --filter @justnotetaking/api db:generate`; FTS5 migration (`0002_notes_fts.sql`) is hand-written because drizzle-kit can't model virtual tables.
 
 ## Workflow
 
-- Per-app commands live under `pnpm --filter @justnotes/<app> <script>`. Root `pnpm dev` runs the web app only.
+- Per-app commands live under `pnpm --filter @justnotetaking/<app> <script>`. Root `pnpm dev` runs the web app only.
 - After Cargo changes in `src-tauri`, `tauri:dev` needs a restart (Rust recompile).
 - Wrangler hot-reloads code but **not** `wrangler.jsonc` `vars` — restart it when you edit env config.
 - The OG image generator (`python3 brand/build.py`) uses Pillow + macOS's SFNS.ttf. Won't crash without Pillow but will skip the OG output.

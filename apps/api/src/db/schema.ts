@@ -4,7 +4,7 @@ import { sqliteTable, text, integer, real, index } from "drizzle-orm/sqlite-core
 // These match the shape Better Auth's CLI would generate for a Drizzle
 // adapter with provider: "sqlite" + plugins: [anonymous(), bearer()].
 // If a Better Auth upgrade changes the expected schema, re-generate via:
-//   pnpm --filter @justnotes/api auth:generate
+//   pnpm --filter @justnotetaking/api auth:generate
 
 export const user = sqliteTable("user", {
   id: text("id").primaryKey(),
@@ -58,7 +58,7 @@ export const verification = sqliteTable("verification", {
   updatedAt: integer("updatedAt", { mode: "timestamp" }),
 });
 
-// ── justnotes domain tables ─────────────────────────────────────────────
+// ── justnotetaking domain tables ─────────────────────────────────────────────
 
 // One row per note. user_id partitions the table for multi-tenant safety.
 // `t` is the note's "moment" (recency/scrub axis). `updated_at` is the

@@ -267,9 +267,9 @@ def render_og():
     word = ImageFont.truetype(font_path, 110)
     tagline = ImageFont.truetype(font_path, 32)
 
-    # Accent underline above the wordmark — same width as "justnotes"
+    # Accent underline above the wordmark — same width as "justnotetaking"
     # so it reads as part of the same composition.
-    word_bbox = draw.textbbox((text_x, 0), "justnotes", font=word)
+    word_bbox = draw.textbbox((text_x, 0), "justnotetaking", font=word)
     word_w = word_bbox[2] - word_bbox[0]
     underline_y = 235
     draw.rectangle(
@@ -277,7 +277,7 @@ def render_og():
         fill=(*ACCENT, 255),
     )
 
-    draw.text((text_x, underline_y + 22), "justnotes", font=word, fill=(*TEXT, 255))
+    draw.text((text_x, underline_y + 22), "justnotetaking", font=word, fill=(*TEXT, 255))
 
     # Muted tagline
     tagline_color = (*blend(TEXT, BG, 0.45), 255)

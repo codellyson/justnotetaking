@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "justnotes-api",
+  "name": "justnotetaking-api",
   "main": "src/index.ts",
   "compatibility_date": "2026-06-01",
   "compatibility_flags": ["nodejs_compat"],
@@ -12,9 +12,9 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "justnotes-dev",
+      "database_name": "justnotetaking-dev",
       // For `wrangler dev --local` (miniflare in-memory SQLite) this isn't
-      // validated. To use a real remote dev DB: wrangler d1 create justnotes-dev
+      // validated. To use a real remote dev DB: wrangler d1 create justnotetaking-dev
       // and paste the returned ID.
       "database_id": "REPLACE_ME_RUN_wrangler_d1_create",
       "migrations_dir": "drizzle"
@@ -34,23 +34,23 @@
   // attach the custom domain via `wrangler.jsonc#routes` or the dashboard.
   "env": {
     "production": {
-      "name": "justnotes-api-prod",
+      "name": "justnotetaking-api-prod",
       "vars": {
-        "BETTER_AUTH_URL": "https://api.justnotes.kreativekorna.com",
+        "BETTER_AUTH_URL": "https://api.justnotetaking.kreativekorna.com",
         // Comma-separated. Add any extra origins (preview deploys, etc.).
-        "TRUSTED_ORIGINS": "https://justnotes.kreativekorna.com,https://app.justnotes.kreativekorna.com,https://justnotes-marketing.pages.dev,https://justnotes-web.pages.dev,tauri://localhost"
+        "TRUSTED_ORIGINS": "https://justnotetaking.kreativekorna.com,https://app.justnotetaking.kreativekorna.com,https://justnotetaking-marketing.pages.dev,https://justnotetaking-web.pages.dev,tauri://localhost"
       },
       "d1_databases": [
         {
           "binding": "DB",
-          "database_name": "justnotes-prod",
+          "database_name": "justnotetaking-prod",
           "database_id": "b2878772-14a9-432d-9f52-abdb330a670b",
           "migrations_dir": "drizzle"
         }
       ],
       "routes": [
         {
-          "pattern": "api.justnotes.kreativekorna.com",
+          "pattern": "api.justnotetaking.kreativekorna.com",
           "custom_domain": true
         }
       ]

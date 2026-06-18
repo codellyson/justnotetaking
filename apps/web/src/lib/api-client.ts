@@ -1,4 +1,4 @@
-import { createClient } from "@justnotes/api-client";
+import { createClient } from "@justnotetaking/api-client";
 import { API_BASE_URL, isTauri } from "./runtime";
 
 // In Tauri we pull the bearer token from the OS keychain on every
