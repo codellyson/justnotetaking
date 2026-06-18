@@ -44,7 +44,7 @@
         {
           "binding": "DB",
           "database_name": "justnotetaking-prod",
-          "database_id": "b2878772-14a9-432d-9f52-abdb330a670b",
+          "database_id": "52d71419-59c6-47ce-924c-9a73324257b8",
           "migrations_dir": "drizzle"
         }
       ],
