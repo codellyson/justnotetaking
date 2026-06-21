@@ -7,6 +7,9 @@ module.exports = {
   presets: [justuiPreset],
   content: [
     "./src/**/*.{astro,html,ts,tsx}",
-    "../../../justui/src/astro/**/*.astro",
+    // Astro components from justui. See apps/web's config for the
+    // history on why the `../../../justui/...` paths no longer work.
+    "./node_modules/@codellyson/justui/src/astro/**/*.astro",
+    "../../node_modules/@codellyson/justui/src/astro/**/*.astro",
   ],
 };
