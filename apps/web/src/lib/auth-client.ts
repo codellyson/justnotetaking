@@ -36,7 +36,10 @@ async function readKeychainToken(): Promise<string | null> {
   }
 }
 
-async function writeKeychainToken(token: string): Promise<void> {
+// Exported so AuthBootstrap can persist the token straight from a sign-in
+// response — deterministic, vs. relying on the onSuccess hook which can race
+// the post-sign-in session refetch. No-op outside Tauri (getInvoke → null).
+export async function writeKeychainToken(token: string): Promise<void> {
   const invoke = await getInvoke();
   if (!invoke) return;
   try {

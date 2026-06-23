@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { authClient } from "../lib/auth-client";
+import { authClient, writeKeychainToken } from "../lib/auth-client";
 import { API_BASE_URL } from "../lib/runtime";
 
 // Guarantees a session exists whenever children render. On first mount
@@ -8,7 +8,7 @@ import { API_BASE_URL } from "../lib/runtime";
 // as the cookie lands, so children unblock as soon as a session exists
 // — anon or real, the canvas doesn't care.
 export function AuthBootstrap({ children }: { children: ReactNode }) {
-  const { data: session, isPending } = authClient.useSession();
+  const { data: session, isPending, refetch } = authClient.useSession();
   const creatingRef = useRef(false);
   const [lastError, setLastError] = useState<string | null>(null);
 
@@ -20,12 +20,22 @@ export function AuthBootstrap({ children }: { children: ReactNode }) {
     setLastError(null);
     authClient.signIn
       .anonymous()
-      .then((res) => {
+      .then(async (res) => {
         if (res && "error" in res && res.error) {
           const msg = (res.error as { message?: string }).message ?? "sign-in returned an error";
           setLastError(msg);
           console.error("[auth] anonymous sign-in returned error", res.error);
+          return;
         }
+        // On Tauri the bearer token must be in the OS keychain before the
+        // next get-session, but the auth-client onSuccess hook that writes it
+        // can race the post-sign-in refetch, leaving the session null and
+        // re-firing this effect. Persist the token straight from the sign-in
+        // response, then re-read — deterministic, no race. No-op on web,
+        // where the cookie is already set (writeKeychainToken bails early).
+        const token = (res as { data?: { token?: string } } | null)?.data?.token;
+        if (token) await writeKeychainToken(token);
+        await refetch({ query: { disableCookieCache: true } });
       })
       .catch((err) => {
         const msg = err instanceof Error ? err.message : String(err);

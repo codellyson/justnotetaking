@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import { useTheme } from "@codellyson/justui/react";
 import type { Tweaks } from "./lib";
+import { isTauri } from "../../lib/runtime";
 
 const TWEAKS_STYLE = `
   .twk-panel{position:fixed;right:16px;bottom:16px;z-index:2147483646;width:280px;
@@ -401,16 +402,25 @@ export function TweaksUI({
       />
 
       <TweakSection label="Feedback" />
-      <TweakToggle label="Commit glow" value={t.glow} onChange={(v) => setTweak("glow", v)} />
-      <TweakToggle label="Ink underline" value={t.ink} onChange={(v) => setTweak("ink", v)} />
-      <TweakToggle label="Still-warm trail" value={t.warmTrail} onChange={(v) => setTweak("warmTrail", v)} />
-      <TweakToggle label="Paper aging" value={t.paperAge} onChange={(v) => setTweak("paperAge", v)} />
       <TweakToggle label="Compass" value={t.compass} onChange={(v) => setTweak("compass", v)} />
-      <TweakToggle
-        label="Recency key"
-        value={t.showRecencyKey}
-        onChange={(v) => setTweak("showRecencyKey", v)}
-      />
+
+      {isTauri && (
+        <>
+          <TweakSection label="Clipboard" />
+          <TweakToggle
+            label="Auto-capture"
+            value={t.clipboardCapture}
+            onChange={(v) => setTweak("clipboardCapture", v)}
+          />
+          {t.clipboardCapture && (
+            <TweakToggle
+              label="Sync captures to cloud"
+              value={t.clipboardSyncToCloud}
+              onChange={(v) => setTweak("clipboardSyncToCloud", v)}
+            />
+          )}
+        </>
+      )}
 
       <div className="twk-hint">
         <kbd>⌘</kbd><kbd>,</kbd> to toggle
