@@ -16,9 +16,9 @@
     "build": "tsc --noEmit",
     "lint": "tsc --noEmit",
     "deploy": "wrangler deploy",
-    "db:migrate:local": "wrangler d1 migrations apply justnotetaking-dev --local",
-    "db:migrate:remote": "wrangler d1 migrations apply justnotetaking-prod --remote",
-    "db:migrate:create": "wrangler d1 migrations create justnotetaking-dev"
+    "db:migrate:local": "wrangler d1 migrations apply justanotetaker-dev --local",
+    "db:migrate:remote": "wrangler d1 migrations apply justanotetaker-prod --remote",
+    "db:migrate:create": "wrangler d1 migrations create justanotetaker-dev"
   },
   "dependencies": {
     "@cloudflare/workers-types": "^4.20250101.0",

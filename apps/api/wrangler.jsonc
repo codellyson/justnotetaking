@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "justnotetaking-api",
+  "name": "justanotetaker-api",
   "main": "src/index.ts",
   "compatibility_date": "2026-06-01",
   "compatibility_flags": ["nodejs_compat"],
@@ -12,9 +12,9 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "justnotetaking-dev",
+      "database_name": "justanotetaker-dev",
       // For `wrangler dev --local` (miniflare in-memory SQLite) this isn't
-      // validated. To use a real remote dev DB: wrangler d1 create justnotetaking-dev
+      // validated. To use a real remote dev DB: wrangler d1 create justanotetaker-dev
       // and paste the returned ID.
       "database_id": "REPLACE_ME_RUN_wrangler_d1_create",
       "migrations_dir": "migrations"
@@ -36,19 +36,19 @@
   // attach the custom domain via `wrangler.jsonc#routes` or the dashboard.
   "env": {
     "production": {
-      "name": "justnotetaking-api-prod",
+      "name": "justanotetaker-api-prod",
       "vars": {
         "BETTER_AUTH_URL": "https://api.justanotetaker.kreativekorna.com",
         // Comma-separated. Add any extra origins (preview deploys, etc.).
         // tauri://localhost = macOS/Linux; http(s)://tauri.localhost = Windows
         // (WebView2) + Android — the desktop app is CORS-blocked without them.
-        "TRUSTED_ORIGINS": "https://justanotetaker.kreativekorna.com,https://app.justanotetaker.kreativekorna.com,https://justnotetaking-marketing.pages.dev,https://justnotetaking-web.pages.dev,tauri://localhost,http://tauri.localhost,https://tauri.localhost"
+        "TRUSTED_ORIGINS": "https://justanotetaker.kreativekorna.com,https://app.justanotetaker.kreativekorna.com,https://justanotetaker-marketing.pages.dev,https://justanotetaker-web.pages.dev,tauri://localhost,http://tauri.localhost,https://tauri.localhost"
       },
       "d1_databases": [
         {
           "binding": "DB",
-          "database_name": "justnotetaking-prod",
-          "database_id": "52d71419-59c6-47ce-924c-9a73324257b8",
+          "database_name": "justanotetaker-prod",
+          "database_id": "bb13ad9d-a381-4c07-80bb-fba978fb47af",
           "migrations_dir": "migrations"
         }
       ],

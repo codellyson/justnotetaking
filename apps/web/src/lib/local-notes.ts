@@ -5,7 +5,7 @@ import type { Note } from "../components/JustNotes/lib";
 // which is the whole point of the "don't sync clipboard to cloud" setting.
 // useNotes merges these with remote notes on load and routes persistence here
 // for any id it knows is local.
-const KEY = "justnotetaking:local-notes";
+const KEY = "justanotetaker:local-notes";
 
 function readAll(): Note[] {
   try {

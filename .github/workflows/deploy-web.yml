@@ -66,5 +66,5 @@ jobs:
           workingDirectory: apps/web
           command: >-
             pages deploy dist
-            --project-name=justnotetaking-web
+            --project-name=justanotetaker-web
             --branch=${{ github.head_ref || github.ref_name }}
