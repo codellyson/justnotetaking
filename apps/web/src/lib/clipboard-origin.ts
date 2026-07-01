@@ -2,7 +2,7 @@
 // canvas can badge them. Device-local (localStorage) and orthogonal to sync:
 // it covers both synced and local-only captures, but only on the device where
 // the capture happened — a clipboard-origin marker is inherently device-side.
-const KEY = "justnotetaking:clipboard-ids";
+const KEY = "justanotetaker:clipboard-ids";
 
 function read(): Set<string> {
   try {

@@ -1,5 +1,5 @@
 // Persisted so the "clear starter notes" helper survives reloads.
-const KEY = "justnotetaking:seed-ids";
+const KEY = "justanotetaker:seed-ids";
 
 export const seedIdStore = {
   list(): string[] {

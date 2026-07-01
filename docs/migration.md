@@ -1,8 +1,8 @@
-# justnotetaking migration plan
+# justanotetaker migration plan
 
-Move justnotetaking off Next.js 16 and onto the stack we want to live with: **Vite 6 + React 19 + Tailwind 4** on the frontend, **Hono on Cloudflare Workers + D1** for the API, **Better Auth** for identity (anonymous from day one, OAuth later), **Astro** for the marketing site, and **Tauri 2** as a first-class desktop shell.
+Move justanotetaker off Next.js 16 and onto the stack we want to live with: **Vite 6 + React 19 + Tailwind 4** on the frontend, **Hono on Cloudflare Workers + D1** for the API, **Better Auth** for identity (anonymous from day one, OAuth later), **Astro** for the marketing site, and **Tauri 2** as a first-class desktop shell.
 
-The repo shape mirrors `../justdb`'s pnpm-workspace monorepo, but the data model is the opposite axis: justdb is local-first Postgres-via-Rust because DB credentials are sensitive; justnotetaking is cloud-first D1-via-Hono because cross-device sync is the point. The Tauri shell consumes the same HTTP API the browser does — the only runtime difference is how the auth token is transported (cookie vs. bearer).
+The repo shape mirrors `../justdb`'s pnpm-workspace monorepo, but the data model is the opposite axis: justdb is local-first Postgres-via-Rust because DB credentials are sensitive; justanotetaker is cloud-first D1-via-Hono because cross-device sync is the point. The Tauri shell consumes the same HTTP API the browser does — the only runtime difference is how the auth token is transported (cookie vs. bearer).
 
 This plan is the path from `main` (the Next.js scaffold + the in-memory JustNotes canvas at commit `71fb28b`) to a shippable v1.
 
@@ -41,7 +41,7 @@ Each phase is independently shippable. Phase 0 alone is "the canvas, but on the 
 ## Layout (post-Phase 0)
 
 ```
-justnotetaking/
+justanotetaker/
 ├── apps/
 │   ├── web/         # Vite 6 + React 19 + Tailwind 4 (lifted JustNotes components)
 │   ├── api/         # Hono on Cloudflare Workers + Drizzle + Better Auth
@@ -72,7 +72,7 @@ Build the shape. No notes persist yet — the canvas still seeds from `SEED` on 
 ### apps/api
 
 - Hono on Cloudflare Workers, `wrangler dev` for local
-- `wrangler.toml` with D1 binding `DB` → `justnotetaking-dev` (local) and `justnotetaking-prod` (remote, created in Phase 4)
+- `wrangler.toml` with D1 binding `DB` → `justanotetaker-dev` (local) and `justanotetaker-prod` (remote, created in Phase 4)
 - Drizzle schema in `src/db/schema.ts`:
   - Better Auth tables: `user`, `session`, `account`, `verification` (generated via Better Auth CLI)
   - `notes` table is added in Phase 1, not Phase 0
@@ -102,7 +102,7 @@ Build the shape. No notes persist yet — the canvas still seeds from `SEED` on 
 ### apps/marketing
 
 - Astro 5, Tailwind 4 via Vite plugin (the legacy `@astrojs/tailwind` integration is v3-only — use the Vite plugin directly through Astro's `vite.plugins` config)
-- Initial pages: `/` (landing stub, "justnotetaking — spatial notes on a dark canvas"), `/auth/callback` (empty OAuth redirect target — wired in Phase 3)
+- Initial pages: `/` (landing stub, "justanotetaker — spatial notes on a dark canvas"), `/auth/callback` (empty OAuth redirect target — wired in Phase 3)
 - Cloudflare Pages deploy target (Phase 4)
 
 ### src-tauri
@@ -127,7 +127,7 @@ Build the shape. No notes persist yet — the canvas still seeds from `SEED` on 
 - `pnpm --filter @justanotetaker/api dev` runs Hono Worker at `:8787`; `POST /api/auth/sign-in/anonymous` returns a session and creates a row in `user`
 - `pnpm --filter @justanotetaker/marketing dev` runs Astro at `:4321`
 - `pnpm tauri:dev` opens a native window pointed at the Vite app, obtains an anonymous session on first boot, persists the bearer token, reuses it on subsequent launches
-- `wrangler d1 migrations apply justnotetaking-dev --local` applies Better Auth's generated schema cleanly
+- `wrangler d1 migrations apply justanotetaker-dev --local` applies Better Auth's generated schema cleanly
 - All four surfaces share TypeScript types via `packages/api-client`
 - Legacy Next.js files (`src/app/`, `next.config.ts`, `next-env.d.ts`, root tsconfig.json, root postcss.config.mjs, root eslint.config.mjs) are removed
 - Phase 0 lands as a coherent sequence of commits (one per sub-scaffold + a verification commit), not a single squash — keeps blast radius small if a step regresses
@@ -247,7 +247,7 @@ OAuth callback can't land in the Tauri webview directly — Tauri uses a custom 
 
 1. **System-browser handoff + deep link** (preferred):
    - Tauri opens the system browser to `https://justanotetaker.kreativekorna.com/auth/start?desktop=1`
-   - That route runs the standard OAuth flow, exchanges the code for a bearer token, then deep-links back to `justnotetaking://auth/callback?token=...`
+   - That route runs the standard OAuth flow, exchanges the code for a bearer token, then deep-links back to `justanotetaker://auth/callback?token=...`
    - Tauri stores the bearer token in OS keychain
 
 2. **Local listener** (fallback):
@@ -256,7 +256,7 @@ OAuth callback can't land in the Tauri webview directly — Tauri uses a custom 
 
 ### Astro
 
-- Marketing site adds a "Get justnotetaking" button → Tauri release page + a "Try in browser" button → web app
+- Marketing site adds a "Get justanotetaker" button → Tauri release page + a "Try in browser" button → web app
 - `/auth/start` and `/auth/callback` live in `apps/web` (or `apps/api`), not Astro
 
 ### Acceptance
@@ -273,7 +273,7 @@ OAuth callback can't land in the Tauri webview directly — Tauri uses a custom 
 | --- | --- |
 | Tauri | Apple Developer ID signing, notarization, auto-update via `tauri-plugin-updater`, GitHub Releases as the update feed |
 | Workers | Production `wrangler.toml`, custom domain (`api.justanotetaker.kreativekorna.com`), secrets via `wrangler secret put` |
-| D1 | Production DB created via `wrangler d1 create justnotetaking-prod`, migrations run via `wrangler d1 migrations apply --remote` |
+| D1 | Production DB created via `wrangler d1 create justanotetaker-prod`, migrations run via `wrangler d1 migrations apply --remote` |
 | Marketing | Astro deployed to Cloudflare Pages, custom domain (`justanotetaker.kreativekorna.com`) |
 | Observability | Wrangler analytics, Cloudflare Workers Logs for API errors, basic crash reporting for Tauri (Sentry or self-hosted) |
 | Cleanup | Soft-deleted rows past 30 days purged via a scheduled Worker |
@@ -288,7 +288,7 @@ These don't block Phase 0 but need answers before later phases:
 - **Settings storage** — separate `settings` table, or a `user.metadata` JSON column?
 - **Per-note conflict resolution beyond LWW** — needed before any collaborative/shared notes feature
 - **Tauri keychain plugin** — `tauri-plugin-stronghold` (encrypted file in app data dir) vs the `keyring` crate (OS-native keychain) vs `tauri-plugin-keyring`. Leaning `keyring` for true OS integration.
-- **Hosted SaaS path** — justdb has both a hosted Next.js SaaS and a Tauri build from the same repo. justnotetaking' Astro marketing + Vite web app already cover the "try in browser" surface. Confirm we don't also want a second hosted variant.
+- **Hosted SaaS path** — justdb has both a hosted Next.js SaaS and a Tauri build from the same repo. justanotetaker' Astro marketing + Vite web app already cover the "try in browser" surface. Confirm we don't also want a second hosted variant.
 
 ---
 

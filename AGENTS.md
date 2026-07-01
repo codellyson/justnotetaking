@@ -8,7 +8,7 @@ A pnpm workspace with four surfaces. Read this before touching code — your tra
 - **Auth is Better Auth.** Anonymous-first via the `anonymous()` plugin — every visitor gets a real user row before doing anything. The plugin's `onLinkAccount` callback transfers FK'd rows to the new user_id when an anon upgrades to email/password or OAuth. Don't hand-roll sessions, cookies, or user tables.
 - **Design system is [`@codellyson/justui`](https://www.npmjs.com/package/@codellyson/justui).** Use the `Button` / `Field` / `Modal` / `ThemeToggle` primitives + token-based Tailwind utilities (`bg-bg`, `text-primary`, `bg-accent`, …). Don't introduce new hardcoded colors — they won't theme.
 - **Tauri talks to the API over HTTPS** like the browser does. The webview uses Better Auth's `bearer()` plugin with the token persisted in OS keychain; the browser uses cookies. The transport switch lives in `apps/web/src/lib/auth-client.ts`, gated on `isTauri`.
-- **OAuth in Tauri** uses the RFC 8252 localhost-listener pattern via `tauri-plugin-oauth`, not a custom URL scheme. The system browser bounces back to a localhost port the Rust side spun up, not `justnotetaking://`.
+- **OAuth in Tauri** uses the RFC 8252 localhost-listener pattern via `tauri-plugin-oauth`, not a custom URL scheme. The system browser bounces back to a localhost port the Rust side spun up, not `justanotetaker://`.
 
 ## Sharp edges
 

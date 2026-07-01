@@ -2,7 +2,7 @@
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Just a Notetaker",
   "version": "0.3.0",
-  "identifier": "com.kreativekorna.justnotetaking",
+  "identifier": "com.kreativekorna.justanotetaker",
   "build": {
     "frontendDist": "../apps/web/dist",
     "devUrl": "http://localhost:5173",

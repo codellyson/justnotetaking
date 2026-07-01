@@ -5,8 +5,8 @@ Day-to-day, you don't deploy by hand — GitHub Actions does it:
 | Workflow | Trigger | What it does |
 | --- | --- | --- |
 | `deploy-api.yml`       | `apps/api/**` change on `main`        | Applies D1 migrations, deploys the Hono Worker (`--env production`) |
-| `deploy-web.yml`       | `apps/web/**`, `packages/api-client/**`, or `apps/api/src/**` change on `main` (or PR) | Builds + deploys to Pages project `justnotetaking-web`. PRs get a preview URL. |
-| `deploy-marketing.yml` | `apps/marketing/**` change on `main` (or PR) | Builds + deploys to Pages project `justnotetaking-marketing`. PRs get a preview URL. |
+| `deploy-web.yml`       | `apps/web/**`, `packages/api-client/**`, or `apps/api/src/**` change on `main` (or PR) | Builds + deploys to Pages project `justanotetaker-web`. PRs get a preview URL. |
+| `deploy-marketing.yml` | `apps/marketing/**` change on `main` (or PR) | Builds + deploys to Pages project `justanotetaker-marketing`. PRs get a preview URL. |
 | `release.yml`          | `git push origin v*.*.*`              | Cross-platform Tauri matrix (macOS universal, Windows, Linux). Creates a draft GitHub Release. Signs artifacts iff signing secrets exist. |
 | `ci.yml`               | every PR + push to `main`             | Typechecks + builds every app; `cargo check` the Tauri shell. Gate for the deploy workflows. |
 
@@ -52,7 +52,7 @@ Optional secrets (signing — see [Desktop release](#desktop-release-tauri)):
 - Optional: Google Cloud Console OAuth client (only needed if you want the Google sign-in button)
 
 ```sh
-cd /path/to/justnotetaking
+cd /path/to/justanotetaker
 pnpm install   # if you haven't already
 pnpm --filter @justanotetaker/api exec wrangler login
 ```
@@ -65,8 +65,8 @@ Each env (dev/prod) gets its own D1 instance.
 
 ```sh
 # One-time per env. Copy the database_id from the output into wrangler.jsonc.
-pnpm --filter @justanotetaker/api exec wrangler d1 create justnotetaking-dev
-pnpm --filter @justanotetaker/api exec wrangler d1 create justnotetaking-prod
+pnpm --filter @justanotetaker/api exec wrangler d1 create justanotetaker-dev
+pnpm --filter @justanotetaker/api exec wrangler d1 create justanotetaker-prod
 ```
 
 Open `apps/api/wrangler.jsonc` and replace both `REPLACE_ME_RUN_wrangler_d1_create` placeholders with the real IDs:
@@ -78,7 +78,7 @@ Apply migrations to both:
 ```sh
 # Dev (uses miniflare in-memory by default; --remote hits the real D1)
 pnpm --filter @justanotetaker/api db:migrate:local       # local SQLite
-pnpm --filter @justanotetaker/api exec wrangler d1 migrations apply justnotetaking-dev --remote
+pnpm --filter @justanotetaker/api exec wrangler d1 migrations apply justanotetaker-dev --remote
 
 # Prod
 pnpm --filter @justanotetaker/api db:migrate:remote
@@ -156,11 +156,11 @@ Static build, no SSR — Pages serves the `dist/` directly.
 ```sh
 # Build with the prod URLs baked into the CTAs
 PUBLIC_WEB_URL=https://justanotetaker.kreativekorna.com \
-PUBLIC_DESKTOP_URL=https://github.com/your-org/justnotetaking/releases/latest \
+PUBLIC_DESKTOP_URL=https://github.com/your-org/justanotetaker/releases/latest \
 pnpm --filter @justanotetaker/marketing build
 
 # Deploy (first run prompts for project name + branch settings)
-pnpm --filter @justanotetaker/marketing exec wrangler pages deploy dist --project-name justnotetaking-marketing
+pnpm --filter @justanotetaker/marketing exec wrangler pages deploy dist --project-name justanotetaker-marketing
 ```
 
 For continuous deploys, hook Pages up to the GitHub repo in the dashboard with this build command:
@@ -182,7 +182,7 @@ The web app is a static Vite bundle. Same Pages flow as marketing, different pro
 VITE_API_BASE_URL=https://api.justanotetaker.kreativekorna.com \
 pnpm --filter @justanotetaker/web build
 
-pnpm --filter @justanotetaker/web exec wrangler pages deploy dist --project-name justnotetaking-web
+pnpm --filter @justanotetaker/web exec wrangler pages deploy dist --project-name justanotetaker-web
 ```
 
 `VITE_API_BASE_URL` is honored by `apps/web/src/lib/runtime.ts` — set it to override the prod default for staging/preview builds.
@@ -198,8 +198,8 @@ The shell compiles, `tauri:dev` opens a window, the updater plugin and `tauri-pl
 ### 6a · Generate a signing key (one-time)
 
 ```sh
-# Creates ~/.tauri/justnotetaking.key (private) and prints the public key.
-pnpm --filter root exec tauri signer generate -w ~/.tauri/justnotetaking.key
+# Creates ~/.tauri/justanotetaker.key (private) and prints the public key.
+pnpm --filter root exec tauri signer generate -w ~/.tauri/justanotetaker.key
 ```
 
 Open `src-tauri/tauri.conf.json` and paste the printed pubkey into `plugins.updater.pubkey` (replacing `REPLACE_ME_RUN_tauri_signer_generate`). Also update the `endpoints[0]` URL to point at your repo's releases — replace `REPLACE_ME_ORG` with your GitHub org.
@@ -238,7 +238,7 @@ Per platform: macOS produces `.dmg` + `.app.tar.gz`, Windows `.msi` + `.exe`, Li
 Upload the build artifacts + `latest.json` to a GitHub Release at the version tag matching `tauri.conf.json#version`. The updater endpoint in step 6a is shaped for GitHub Releases:
 
 ```
-https://github.com/<org>/justnotetaking/releases/latest/download/latest.json
+https://github.com/<org>/justanotetaker/releases/latest/download/latest.json
 ```
 
 Subsequent launches of installed builds will hit this URL on startup (when you call `check()` from `@tauri-apps/plugin-updater` — wire that in `apps/web` when you're ready to prompt users to update; defer is fine until you've cut a 2nd release).
@@ -248,9 +248,9 @@ Subsequent launches of installed builds will hit this URL on startup (when you c
 The shell uses cookie sessions today, same as the browser. Email/password sign-in should work in Tauri without any extra code because Tauri's webview supports cookies for the API origin. Google sign-in is the gap: Google won't redirect to `tauri://` URLs, so we need the system-browser handoff + deep-link callback pattern.
 
 When you tackle this:
-1. Add `tauri-plugin-deep-link` + a `justnotetaking` URL scheme registration
+1. Add `tauri-plugin-deep-link` + a `justanotetaker` URL scheme registration
 2. Add `tauri-plugin-shell` (or `tauri-plugin-opener`) so the React app can open the OAuth start URL in the system browser
-3. Server-side: a `/auth/start?desktop=1` route that runs the OAuth dance, captures the token, then 302s to `justnotetaking://auth/callback?token=…`
+3. Server-side: a `/auth/start?desktop=1` route that runs the OAuth dance, captures the token, then 302s to `justanotetaker://auth/callback?token=…`
 4. Tauri: on receiving the deep link, store the token in OS keychain via the existing `store_bearer_token` command, then re-create the session
 
 See `docs/migration.md#phase-3` for the original sketch.

@@ -12,7 +12,7 @@
 //     emits an "oauth://callback" event with the full URL; the JS side
 //     extracts the token, stores it in keychain, and reloads.
 //
-// We use a localhost listener instead of a justnotetaking:// custom scheme
+// We use a localhost listener instead of a justanotetaker:// custom scheme
 // because macOS only registers custom schemes for bundled .app
 // installs — dev iteration with `tauri:dev` would otherwise need a
 // full bundle + drag-to-Applications cycle every time we change Rust.
@@ -23,7 +23,7 @@ use std::thread;
 use std::time::Duration;
 use tauri::{AppHandle, Emitter, Manager};
 
-const KEYCHAIN_SERVICE: &str = "com.kreativekorna.justnotetaking";
+const KEYCHAIN_SERVICE: &str = "com.kreativekorna.justanotetaker";
 const KEYCHAIN_ACCOUNT: &str = "bearer";
 const OAUTH_CALLBACK_EVENT: &str = "oauth://callback";
 

@@ -65,5 +65,5 @@ jobs:
           workingDirectory: apps/marketing
           command: >-
             pages deploy dist
-            --project-name=justnotetaking-marketing
+            --project-name=justanotetaker-marketing
             --branch=${{ github.head_ref || github.ref_name }}

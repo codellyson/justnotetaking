@@ -1,4 +1,4 @@
-# justnotetaking
+# justanotetaker
 
 Spatial notes on a dark canvas — click anywhere to write, drag to place, type to recall. Notes age visually (fresh → ancient) and sync across devices.
 
