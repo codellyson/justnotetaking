@@ -1625,25 +1625,55 @@ function NoteCard({
 
 // ── ModeSwitch ─────────────────────────────────────────────────────────
 // Top-center segmented control; writes the persisted `viewMode` tweak.
-const MODE_LABELS: { mode: ViewMode; label: string }[] = [
-  { mode: "default", label: "canvas" },
-  { mode: "sticky", label: "sticky" },
-  { mode: "paper", label: "paper" },
+const MODE_META: { mode: ViewMode; label: string; icon: React.ReactNode }[] = [
+  {
+    mode: "default",
+    label: "canvas",
+    // Dotted grid — the freeform infinite canvas.
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <circle cx="7" cy="7" r="1.7" /><circle cx="17" cy="7" r="1.7" />
+        <circle cx="7" cy="17" r="1.7" /><circle cx="17" cy="17" r="1.7" />
+      </svg>
+    ),
+  },
+  {
+    mode: "sticky",
+    label: "sticky",
+    // Square with a folded corner.
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinejoin="round" aria-hidden="true">
+        <path d="M5 4h14v9l-6 6H5z" /><path d="M19 13h-6v6" />
+      </svg>
+    ),
+  },
+  {
+    mode: "paper",
+    label: "paper",
+    // Page with text lines.
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <rect x="5" y="3" width="14" height="18" rx="1.6" /><path d="M8.5 8h7M8.5 12h7M8.5 16h4" />
+      </svg>
+    ),
+  },
 ];
 
 function ModeSwitch({ mode, onChange }: { mode: ViewMode; onChange: (m: ViewMode) => void }) {
   return (
     <div className="chrome mode-switch" role="radiogroup" aria-label="canvas view mode">
-      {MODE_LABELS.map((m) => (
+      {MODE_META.map((m) => (
         <button
           key={m.mode}
           type="button"
           role="radio"
           aria-checked={m.mode === mode}
+          aria-label={m.label}
+          title={m.label}
           className={"mode-switch-btn" + (m.mode === mode ? " active" : "")}
           onClick={() => onChange(m.mode)}
         >
-          {m.label}
+          {m.icon}
         </button>
       ))}
     </div>

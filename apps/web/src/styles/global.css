@@ -398,32 +398,32 @@ body {
   color: rgb(var(--text-muted));
   pointer-events: none;
 }
-/* Top-center — the view-mode switcher. A quiet segmented pill. */
+/* Top-left — the view-mode switcher. A vertical stack of icon buttons. */
 .mode-switch {
-  top: 14px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 16px;
+  left: 16px;
   pointer-events: auto;
   display: flex;
-  gap: 2px;
-  padding: 3px;
-  border-radius: 999px;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
   background: rgb(var(--bg-secondary) / 0.82);
   border: 1px solid rgb(var(--border));
   backdrop-filter: blur(8px);
-  box-shadow: 0 4px 14px -8px rgba(0, 0, 0, 0.4);
 }
 .mode-switch-btn {
   appearance: none;
   border: 0;
   background: transparent;
   cursor: pointer;
-  font-family: var(--font-jn-mono), ui-monospace, monospace;
-  font-size: 11px;
-  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
   color: rgb(var(--text-muted));
-  padding: 5px 14px;
-  border-radius: 999px;
   transition:
     color 160ms ease,
     background 160ms ease;
