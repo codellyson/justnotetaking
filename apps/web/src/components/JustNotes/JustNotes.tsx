@@ -21,6 +21,7 @@ import {
   PAPER_W,
   PAPER_H,
   type Note,
+  type ModePos,
   type Tweaks,
   type ViewMode,
 } from "./lib";
@@ -40,7 +41,7 @@ import { Graveyard } from "./Graveyard";
 
 type Persist = {
   onCreate: (note: Note, opts?: { localOnly?: boolean }) => void | Promise<void>;
-  onUpdate: (id: string, patch: Partial<Pick<Note, "x" | "y" | "w" | "h" | "t" | "text">>) => void;
+  onUpdate: (id: string, patch: Partial<Pick<Note, "x" | "y" | "w" | "h" | "t" | "text" | "modePos">>) => void;
   onDelete: (id: string) => void;
 };
 
@@ -84,6 +85,14 @@ export default function JustNotes(props: JustNotesProps) {
   // so ordinary dragging never lags.
   const viewMode = t.viewMode;
   const [layoutAnimating, setLayoutAnimating] = useState(false);
+
+  // Sticky/paper render from this ephemeral map (a declumped layout computed on
+  // mode entry), NOT from the notes' real x/y — so the canvas arrangement is
+  // never mutated and `default` always restores it. Dragging in a mode edits
+  // this map only; nothing writes back to the notes. Empty in default mode.
+  const [modePos, setModePos] = useState<Map<string, { x: number; y: number }>>(() => new Map());
+  const modePosRef = useRef(modePos);
+  useEffect(() => { modePosRef.current = modePos; }, [modePos]);
 
   const [ambientOpen, setAmbientOpen] = useState(false);
   const [recallQuery, setRecallQuery] = useState("");
@@ -216,6 +225,8 @@ export default function JustNotes(props: JustNotesProps) {
   const historyRef = useRef<UndoOp[]>([]);
   const editSnapshotRef = useRef<{ id: string; isNew: boolean; prevText: string; prevT: number } | null>(null);
   const prevViewRef = useRef<View | null>(null);
+  // The view to fly back to after editing a paper page (see focusPaper).
+  const focusReturnViewRef = useRef<View | null>(null);
   const tweakRef = useRef<Tweaks>(t);
   useEffect(() => { tweakRef.current = t; }, [t]);
 
@@ -274,36 +285,46 @@ export default function JustNotes(props: JustNotesProps) {
   // (real positions are never touched, so default restores the true layout).
   // The dragged note is excluded so it follows the cursor and doesn't shove
   // the others. Empty in default — NoteCard falls back to home x/y.
-  const layout = useMemo(() => {
-    const map = new Map<string, { x: number; y: number }>();
-    if (viewMode === "default") return map;
-    const w = viewMode === "sticky" ? STICKY_SIZE : PAPER_W;
-    const h = viewMode === "sticky" ? STICKY_SIZE : PAPER_H;
+  // Declump a note list into a display-only layout for the given mode's card
+  // size. Reading order anchors the top-left; later cards get nudged off the
+  // ones already placed. Pure — reads nothing it isn't handed, mutates nothing.
+  function computeModeLayout(list: Note[], mode: ViewMode) {
+    const w = mode === "sticky" ? STICKY_SIZE : PAPER_W;
+    const h = mode === "sticky" ? STICKY_SIZE : PAPER_H;
     const placed: { x: number; y: number; w: number; h: number }[] = [];
-    // Reading order anchors the top-left and only pushes later notes.
-    const ordered = notes
-      .filter((n) => n.id !== draggingId)
-      .sort((a, b) => a.y - b.y || a.x - b.x);
+    const map = new Map<string, { x: number; y: number }>();
+    const ordered = [...list].sort((a, b) => a.y - b.y || a.x - b.x);
     for (const n of ordered) {
       const spot = resolveFreePosition(n.x, n.y, w, h, placed);
       placed.push({ x: spot.x, y: spot.y, w, h });
       map.set(n.id, spot);
     }
     return map;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viewMode, notes, draggingId]);
+  }
 
-  // So the drag handler can read the current display layout.
-  const layoutRef = useRef(layout);
-  useEffect(() => { layoutRef.current = layout; }, [layout]);
+  // The mode layout for `mode`: each note uses its own persisted `modePos`
+  // (synced with the note) if it has one, else a freshly-declumped spot.
+  // Nothing is written here — only an explicit drag persists (see onUp).
+  function loadModeLayout(mode: "sticky" | "paper"): Map<string, { x: number; y: number }> {
+    const computed = computeModeLayout(notesRef.current, mode);
+    const map = new Map<string, { x: number; y: number }>();
+    for (const n of notesRef.current) {
+      map.set(n.id, n.modePos?.[mode] ?? computed.get(n.id) ?? { x: n.x, y: n.y });
+    }
+    return map;
+  }
 
-  // Pulse the glide transition on a mode change (no view/position changes).
+  // On a mode change: pulse the glide transition and load the persisted layout
+  // for the mode (default clears it, so cards fall back to their real x/y — the
+  // untouched canvas layout).
   useEffect(() => {
     if (prevModeRef.current === viewMode) return;
     prevModeRef.current = viewMode;
     setLayoutAnimating(true);
     const stop = window.setTimeout(() => setLayoutAnimating(false), 620);
+    setModePos(viewMode === "default" ? new Map() : loadModeLayout(viewMode));
     return () => window.clearTimeout(stop);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewMode]);
 
   function screenToCanvas(sx: number, sy: number, v: View = viewRef.current) {
@@ -330,20 +351,23 @@ export default function JustNotes(props: JustNotesProps) {
     const id = uid();
     const w = tweakRef.current.noteWidth;
     const spot = findFreeSpot(canvasX - w / 2, canvasY - 22);
-    setNotes((ns) => [...ns, { id, x: spot.x, y: spot.y, w: null, h: null, t: Date.now(), text: initialText }]);
+    setNotes((ns) => [...ns, { id, x: spot.x, y: spot.y, w: null, h: null, t: Date.now(), text: initialText, modePos: null }]);
     editSnapshotRef.current = { id, isNew: true, prevText: "", prevT: Date.now() };
     setEditingId(id);
   }
 
-  // On-screen rects (declumped display spot + DOM-measured size) for collision.
+  // Rects of every note but `excludeId`, for collision resolution on drop /
+  // spawn. Position is where the card actually sits — the mode map in a mode,
+  // else the note's real x/y — with size measured from the DOM.
   function measureRects(excludeId?: string) {
     const layer = canvasRef.current?.querySelector(".notes-layer");
-    const disp = layoutRef.current;
+    const managed = tweakRef.current.viewMode !== "default";
+    const mp = modePosRef.current;
     const rects: { x: number; y: number; w: number; h: number }[] = [];
     for (const n of notesRef.current) {
       if (n.id === excludeId) continue;
       const el = layer?.querySelector<HTMLElement>(`[data-note-id="${n.id}"]`);
-      const p = disp.get(n.id) ?? { x: n.x, y: n.y };
+      const p = managed ? mp.get(n.id) ?? { x: n.x, y: n.y } : { x: n.x, y: n.y };
       rects.push({
         x: p.x,
         y: p.y,
@@ -398,7 +422,7 @@ export default function JustNotes(props: JustNotesProps) {
     const x = spot.x;
     const y = spot.y;
     const now = Date.now();
-    const note: Note = { id, x, y, w: null, h: null, t: now, text };
+    const note: Note = { id, x, y, w: null, h: null, t: now, text, modePos: null };
     setNotes((ns) => [...ns, note]);
     pushOp({ type: "create", id });
     void onCreate(note, opts);
@@ -447,6 +471,24 @@ export default function JustNotes(props: JustNotesProps) {
     spawnAt(c.x, c.y, initialText);
   }
 
+  // Paper only: fly the canvas to center the page and fit its A4 height in the
+  // viewport, so editing a document-sized surface happens head-on. The current
+  // view is stashed so commitEditing can fly back.
+  function focusPaper(id: string) {
+    const el = canvasRef.current;
+    const W = el?.clientWidth ?? window.innerWidth;
+    const H = el?.clientHeight ?? window.innerHeight;
+    const n = notesRef.current.find((x) => x.id === id);
+    const p = modePosRef.current.get(id) ?? (n ? { x: n.x, y: n.y } : { x: 0, y: 0 });
+    // Zoom so the whole A4 page fits the viewport (contain) — this zooms IN
+    // when the page is smaller than the viewport, rather than capping at 1×.
+    const margin = 60;
+    const zoom = Math.max(0.32, Math.min(2.5, Math.min((W - margin * 2) / PAPER_W, (H - margin * 2) / PAPER_H)));
+    const cx = p.x + PAPER_W / 2, cy = p.y + PAPER_H / 2;
+    focusReturnViewRef.current = viewRef.current;
+    animateView({ pan: { x: W / 2 - cx * zoom, y: H / 2 - cy * zoom }, zoom });
+  }
+
   function startEditingExisting(id: string) {
     if (editingId === id) return;
     if (editingId) commitEditing();
@@ -454,6 +496,7 @@ export default function JustNotes(props: JustNotesProps) {
     if (!n) return;
     editSnapshotRef.current = { id, isNew: false, prevText: n.text, prevT: n.t };
     setEditingId(id);
+    if (tweakRef.current.viewMode === "paper") focusPaper(id);
   }
 
   function commitEditing() {
@@ -484,6 +527,11 @@ export default function JustNotes(props: JustNotesProps) {
     }
     setEditingId(null);
     editSnapshotRef.current = null;
+    // Fly back to where we were before focusing a paper page.
+    if (focusReturnViewRef.current) {
+      animateView(focusReturnViewRef.current);
+      focusReturnViewRef.current = null;
+    }
   }
 
   function updateNoteText(id: string, text: string) {
@@ -516,7 +564,7 @@ export default function JustNotes(props: JustNotesProps) {
   }
 
   function reinsertRestoredNote(note: { id: string; x: number; y: number; t: number; text: string }) {
-    setNotes((ns) => (ns.some((n) => n.id === note.id) ? ns : [...ns, { ...note, w: null, h: null }]));
+    setNotes((ns) => (ns.some((n) => n.id === note.id) ? ns : [...ns, { ...note, w: null, h: null, modePos: null }]));
   }
 
   function startResize(e: React.MouseEvent<HTMLDivElement>, id: string, dir: "e" | "s" | "se") {
@@ -688,24 +736,15 @@ export default function JustNotes(props: JustNotesProps) {
     if (!note) return;
     const isSelected = selectedIdsRef.current.has(id);
     const groupIds: string[] = isSelected ? Array.from(selectedIdsRef.current) : [id];
-    // Drag from the displayed spot: bake the declumped position into real so
-    // the card follows the cursor with no jump; origReals reverts on a plain
-    // click (no drag).
-    const disp = layoutRef.current;
+    // In a mode, a drag edits the ephemeral mode map (canvas x/y untouched, so
+    // nothing persists and default is unaffected). In default it edits the real
+    // x/y. Either way only the grabbed card(s) move — no reflow of the rest.
+    const managed = tweakRef.current.viewMode !== "default";
     const startPositions = new Map<string, { x: number; y: number }>();
-    const origReals = new Map<string, { x: number; y: number }>();
-    const bakes: { id: string; x: number; y: number }[] = [];
     for (const nid of groupIds) {
       const n = notesRef.current.find((x) => x.id === nid);
       if (!n) continue;
-      const p = disp.get(nid) ?? { x: n.x, y: n.y };
-      startPositions.set(nid, p);
-      origReals.set(nid, { x: n.x, y: n.y });
-      if (p.x !== n.x || p.y !== n.y) bakes.push({ id: nid, x: p.x, y: p.y });
-    }
-    if (bakes.length) {
-      const bakeById = new Map(bakes.map((b) => [b.id, b]));
-      setNotes((ns) => ns.map((n) => { const b = bakeById.get(n.id); return b ? { ...n, x: b.x, y: b.y } : n; }));
+      startPositions.set(nid, managed ? modePosRef.current.get(nid) ?? { x: n.x, y: n.y } : { x: n.x, y: n.y });
     }
     const startSX = e.clientX, startSY = e.clientY;
     let moved = false;
@@ -718,22 +757,28 @@ export default function JustNotes(props: JustNotesProps) {
       const z = viewRef.current.zoom;
       const dx = dxs / z, dy = dys / z;
       const useSnap = tweakRef.current.snap && !ev.shiftKey;
-      setNotes((ns) => ns.map((n) => {
-        const sp = startPositions.get(n.id);
-        if (!sp) return n;
-        const rx = sp.x + dx, ry = sp.y + dy;
-        return { ...n, x: useSnap ? snap(rx) : rx, y: useSnap ? snap(ry) : ry };
-      }));
+      const at = (sp: { x: number; y: number }) => ({
+        x: useSnap ? snap(sp.x + dx) : sp.x + dx,
+        y: useSnap ? snap(sp.y + dy) : sp.y + dy,
+      });
+      if (managed) {
+        setModePos((prev) => {
+          const next = new Map(prev);
+          startPositions.forEach((sp, nid) => next.set(nid, at(sp)));
+          return next;
+        });
+      } else {
+        setNotes((ns) => ns.map((n) => {
+          const sp = startPositions.get(n.id);
+          return sp ? { ...n, ...at(sp) } : n;
+        }));
+      }
     };
     const onUp = () => {
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
       setDraggingId(null);
       if (!moved) {
-        // A click, not a drag — undo the bake (stays at its declumped spot).
-        if (bakes.length) {
-          setNotes((ns) => ns.map((n) => { const o = origReals.get(n.id); return o ? { ...n, x: o.x, y: o.y } : n; }));
-        }
         // Single click selects; editing is on double-click (onDoubleClick).
         if (editingId && editingId !== id) commitEditing();
         if (ambientOpen) closeAmbient();
@@ -741,28 +786,57 @@ export default function JustNotes(props: JustNotesProps) {
         return;
       }
       // Single-card drops snap to the nearest free spot so cards never stack.
-      if (groupIds.length === 1) {
-        const nid = groupIds[0];
-        const orig = origReals.get(nid);
-        const cur = notesRef.current.find((n) => n.id === nid);
-        if (orig && cur) {
-          const el = canvasRef.current?.querySelector<HTMLElement>(`[data-note-id="${nid}"]`);
-          const selfW = el?.offsetWidth ?? cur.w ?? tweakRef.current.noteWidth;
-          const selfH = el?.offsetHeight ?? cur.h ?? 96;
-          const spot = resolveFreePosition(cur.x, cur.y, selfW, selfH, measureRects(nid));
-          pushOp({ type: "move", id: nid, prevX: orig.x, prevY: orig.y });
-          if (spot.x !== cur.x || spot.y !== cur.y) {
-            setNotes((ns) => ns.map((n) => (n.id === nid ? { ...n, x: spot.x, y: spot.y } : n)));
-            setSnappingId(nid);
-            window.setTimeout(() => setSnappingId((s) => (s === nid ? null : s)), 340);
+      const el = canvasRef.current?.querySelector<HTMLElement>(`[data-note-id="${id}"]`);
+      const selfW = el?.offsetWidth ?? note.w ?? tweakRef.current.noteWidth;
+      const selfH = el?.offsetHeight ?? note.h ?? 96;
+      if (managed) {
+        // Settle the dragged card, then persist the moved card(s)' positions
+        // onto their notes' `modePos` (canvas x/y untouched). This syncs.
+        const mode = tweakRef.current.viewMode as "sticky" | "paper";
+        const final = new Map(modePosRef.current);
+        if (groupIds.length === 1) {
+          const cur = final.get(id);
+          if (cur) {
+            const spot = resolveFreePosition(cur.x, cur.y, selfW, selfH, measureRects(id));
+            if (spot.x !== cur.x || spot.y !== cur.y) {
+              final.set(id, spot);
+              setModePos(new Map(final));
+              setSnappingId(id);
+              window.setTimeout(() => setSnappingId((s) => (s === id ? null : s)), 340);
+            }
           }
-          onUpdate(nid, { x: spot.x, y: spot.y });
+        }
+        const patches = new Map<string, ModePos>();
+        for (const nid of groupIds) {
+          const pos = final.get(nid);
+          if (!pos) continue;
+          const cur = notesRef.current.find((n) => n.id === nid);
+          patches.set(nid, { ...(cur?.modePos ?? {}), [mode]: pos });
+        }
+        if (patches.size) {
+          setNotes((ns) => ns.map((n) => { const p = patches.get(n.id); return p ? { ...n, modePos: p } : n; }));
+          for (const [nid, mp] of patches) onUpdate(nid, { modePos: mp });
+        }
+        return;
+      }
+      if (groupIds.length === 1) {
+        const sp = startPositions.get(id);
+        const cur = notesRef.current.find((n) => n.id === id);
+        if (sp && cur) {
+          const spot = resolveFreePosition(cur.x, cur.y, selfW, selfH, measureRects(id));
+          pushOp({ type: "move", id, prevX: sp.x, prevY: sp.y });
+          if (spot.x !== cur.x || spot.y !== cur.y) {
+            setNotes((ns) => ns.map((n) => (n.id === id ? { ...n, x: spot.x, y: spot.y } : n)));
+            setSnappingId(id);
+            window.setTimeout(() => setSnappingId((s) => (s === id ? null : s)), 340);
+          }
+          onUpdate(id, { x: spot.x, y: spot.y });
         }
       } else {
         for (const nid of groupIds) {
-          const orig = origReals.get(nid);
-          if (!orig) continue;
-          pushOp({ type: "move", id: nid, prevX: orig.x, prevY: orig.y });
+          const sp = startPositions.get(nid);
+          if (!sp) continue;
+          pushOp({ type: "move", id: nid, prevX: sp.x, prevY: sp.y });
           const cur = notesRef.current.find((n) => n.id === nid);
           if (cur) onUpdate(nid, { x: cur.x, y: cur.y });
         }
@@ -1203,7 +1277,7 @@ export default function JustNotes(props: JustNotesProps) {
             <NoteCard
               key={n.id}
               note={n}
-              pos={layout.get(n.id) ?? { x: n.x, y: n.y }}
+              pos={viewMode === "default" ? { x: n.x, y: n.y } : modePos.get(n.id) ?? { x: n.x, y: n.y }}
               viewMode={viewMode}
               stickyColor={viewMode === "sticky" ? stickyColorOf(n.id) : null}
               fromClipboard={clipboardIds.has(n.id)}
@@ -1415,11 +1489,13 @@ function NoteCard({
   const taRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
-    if (!editing || !taRef.current) return;
+    // Sticky is a fixed square — don't auto-grow the textarea (it would spill
+    // out of the card); CSS fills it and scrolls instead. Default/paper grow.
+    if (!editing || !taRef.current || viewMode === "sticky") return;
     const ta = taRef.current;
     ta.style.height = "auto";
     ta.style.height = ta.scrollHeight + "px";
-  }, [editing, note.text]);
+  }, [editing, note.text, viewMode]);
 
   useEffect(() => {
     if (editing && taRef.current) {
